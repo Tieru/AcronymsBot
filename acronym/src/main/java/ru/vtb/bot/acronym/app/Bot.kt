@@ -21,11 +21,11 @@ object Bot : KoinComponent {
     private val LOGGER = LoggerFactory.getLogger(Bot::class.java)
     private val messageHandler by inject<GeneralMessageHandler>()
     private val inlineQueryHandler by inject<InlineQueryHandler>()
-    private val launchOptions by inject<LaunchOptions>()
+    private val properties by inject<BotProperties>()
 
     val instance by lazy {
         bot {
-            token = launchOptions.botToken
+            token = properties.botToken
             logLevel = LogLevel.Error
 
             dispatch {

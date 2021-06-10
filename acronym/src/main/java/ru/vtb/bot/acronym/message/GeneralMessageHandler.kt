@@ -13,10 +13,12 @@ import ru.vtb.bot.acronym.service.AcronymService
 import ru.vtb.bot.acronym.service.entity.AddAcronymResult
 import ru.vtb.bot.acronym.service.entity.DeleteAcronymResult
 import ru.vtb.bot.acronym.service.entity.GetAcronymResult
+import ru.vtb.bot.acronym.service.entity.TrackService
 
 class GeneralMessageHandler(
     private val commandParser: CommandParser,
     private val acronymService: AcronymService,
+    private val trackService: TrackService
 ) {
     suspend fun onMessage(environment: TextHandlerEnvironment) {
         if (environment.message.chat.type != PRIVATE_CHAT_TYPE) {
@@ -58,6 +60,7 @@ class GeneralMessageHandler(
     }
 
     private fun onGetAcronym(environment: TextHandlerEnvironment) {
+        trackService.trackIncoming(environment.message.chat.id, "Get acronym", environment.text)
         val result = acronymService.onGetAcronym(environment.text)
         when (result) {
             GetAcronymResult.NotFound -> environment.answer("Аббревиатура не найдена")
@@ -71,10 +74,12 @@ class GeneralMessageHandler(
 
     private fun onStartCommand(environment: TextHandlerEnvironment) {
         LOGGER.info("User ${environment.message.from?.usernameOrName} joined bot" )
+        trackService.trackIncoming(environment.message.chat.id, "Start", environment.text)
         environment.answer("Здравствуйте.\nОтправляйте мне аббревиатуры, и я постараюсь найти, что они значат")
     }
 
     private fun onHelpCommand(environment: TextHandlerEnvironment) {
+        trackService.trackIncoming(environment.message.chat.id, "Help", environment.text)
         val keyboard = InlineKeyboardMarkup.createSingleButton(
             InlineKeyboardButton.SwitchInlineQueryCurrentChat(
                 text = "Перейти в inline режим",
@@ -88,6 +93,7 @@ class GeneralMessageHandler(
     }
 
     private fun onMarkUpHelpCommand(environment: TextHandlerEnvironment) {
+        trackService.trackIncoming(environment.message.chat.id, "Markdown help", environment.text)
         environment.answer("Примеры форматирования. Обратите внимание, что спец символы нужно 'ескейпать' обратными слэшами\n\n*Жирный текст* - \\*жирный текст\\*\n_Курсив_ - \\_Курсив\\_\n[Ссылка](http://example.com) - \\[Ссылка](http://example.com)")
     }
 
@@ -101,6 +107,7 @@ class GeneralMessageHandler(
     }
 
     private suspend fun onAddAcronymCommand(environment: TextHandlerEnvironment, acronym: String?, description: String?) {
+        trackService.trackIncoming(environment.message.chat.id, "Add", environment.text)
         if (acronym.isNullOrEmpty()) {
             environment.answer("Чтобы добавить аббревиатуру добавьте к команде /add аббревиатуру и через пробел описание:\n`/add QR Quick Response`\n\nНе забывайте удалять за собой ненужные аббревиатуры командой /delete\nДопускается использование Markdown разметки в описании /markdown")
             return
@@ -120,6 +127,7 @@ class GeneralMessageHandler(
     }
 
     private suspend fun onRemoveAcronymCommand(environment: TextHandlerEnvironment, acronym: String?) {
+        trackService.trackIncoming(environment.message.chat.id, "Remove", environment.text)
         if (acronym.isNullOrBlank()) {
             environment.answer("Для удаления добавьте название аббревиатуры: `/delete ABC`")
         } else {
@@ -133,6 +141,7 @@ class GeneralMessageHandler(
     }
 
     private fun onUnknownCommand(environment: TextHandlerEnvironment) {
+        trackService.trackIncoming(environment.message.chat.id, "Unknown", environment.text)
         environment.answer("Некорректная команда")
     }
 

@@ -21,6 +21,10 @@ dependencies {
     implementation("com.google.cloud:google-cloud-firestore:2.2.5")
     implementation("com.google.firebase:firebase-admin:7.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
+    implementation("io.ktor:ktor-client-jackson:1.5.4")
+    implementation("io.ktor:ktor-client-core:1.5.4")
+    implementation("io.ktor:ktor-client-cio:1.5.4")
+
 
     implementation("org.slf4j:slf4j-api:1.7.30")
     implementation("ch.qos.logback:logback-core:1.2.3")
