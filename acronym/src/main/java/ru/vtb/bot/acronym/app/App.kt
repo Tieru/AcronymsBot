@@ -5,15 +5,16 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import ru.vtb.bot.acronym.injection.dataModule
 import ru.vtb.bot.acronym.injection.serviceModule
+import ru.vtb.bot.acronym.injection.trackModule
 
 @KoinApiExtension
 fun main() {
-    val launchOptions = LaunchOptions.initialize()
+    val launchOptions = BotProperties.initialize()
     startBot(launchOptions)
 }
 
 @KoinApiExtension
-private fun startBot(launchArgs: LaunchOptions) {
+private fun startBot(launchArgs: BotProperties) {
     startKoin {
         printLogger()
         modules(
@@ -21,6 +22,7 @@ private fun startBot(launchArgs: LaunchOptions) {
                 single { launchArgs }
             },
             dataModule,
+            trackModule,
             serviceModule,
         )
     }
