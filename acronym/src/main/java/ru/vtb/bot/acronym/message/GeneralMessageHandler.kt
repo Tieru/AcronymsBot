@@ -64,7 +64,7 @@ class GeneralMessageHandler(
         val result = acronymService.onGetAcronym(environment.text)
         when (result) {
             GetAcronymResult.NotFound -> environment.answer("Аббревиатура не найдена")
-            is GetAcronymResult.Found -> environment.answer(result.acronym.formatWithMarkdown())
+            is GetAcronymResult.Found -> environment.answer(result.acronym.formattedWithMarkdown)
             is GetAcronymResult.FoundSimilar -> {
                 val similar = result.similar.joinToString(separator = "*, *")
                 environment.answer("Точных совпадений не найдено.\nПохожие варианты: *${similar}*")
@@ -94,7 +94,7 @@ class GeneralMessageHandler(
 
     private fun onMarkUpHelpCommand(environment: TextHandlerEnvironment) {
         trackService.trackIncoming(environment.message.chat.id, "Markdown help", environment.text)
-        environment.answer("Примеры форматирования. Обратите внимание, что спец символы нужно 'ескейпать' обратными слэшами\n\n*Жирный текст* - \\*жирный текст\\*\n_Курсив_ - \\_Курсив\\_\n[Ссылка](http://example.com) - \\[Ссылка](http://example.com)")
+        environment.answer("Примеры форматирования. Обратите внимание, что спец символы нужно 'ескейпать' обратными слэшами\n\n*Жирный текст* - \\\\*жирный текст\\\\*\n_Курсив_ - \\\\_Курсив\\\\_\n[Ссылка](http://example.com) - \\\\[Ссылка](http://example.com)")
     }
 
     private suspend fun onReload(environment: TextHandlerEnvironment) {

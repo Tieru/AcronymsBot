@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.vtb.bot.acronym.entity.AcronymData
 import ru.vtb.bot.acronym.entity.AppException
+import ru.vtb.bot.acronym.ext.clearMarkdownEscaping
 import java.util.concurrent.locks.ReentrantLock
 
 class AcronymRepository(
@@ -42,7 +43,7 @@ class AcronymRepository(
 
     suspend fun addAcronym(acronym: String, description: String, user: String): AcronymData {
         return withContext(Dispatchers.IO) {
-            val clearDescription = description.replace("\\", "")
+            val clearDescription = description.clearMarkdownEscaping()
             val values = mapOf(
                 "value" to acronym,
                 "description" to clearDescription,
@@ -76,7 +77,7 @@ class AcronymRepository(
         lock.lock()
         withContext(Dispatchers.IO) {
             firestore.collection(COLLECTION).document(acronym.value).delete().get()
-            cachedData = cachedData?.filter {it.id != acronym.id }
+            cachedData = cachedData?.filter { it.id != acronym.id }
         }
         lock.unlock()
     }

@@ -26,7 +26,7 @@ class InlineQueryHandler(
                 InlineQueryResult.Article(
                     id = it.id,
                     inputMessageContent = InputMessageContent.Text(
-                        messageText = it.formatWithMarkdown(),
+                        messageText = it.formattedWithMarkdown,
                         parseMode = ParseMode.MARKDOWN,
                     ),
                     title = it.value,
