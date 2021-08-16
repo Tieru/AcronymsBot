@@ -6,6 +6,7 @@ import com.github.kotlintelegrambot.dispatcher.inlineQuery
 import com.github.kotlintelegrambot.dispatcher.telegramError
 import com.github.kotlintelegrambot.dispatcher.text
 import com.github.kotlintelegrambot.logging.LogLevel
+import com.github.kotlintelegrambot.webhook
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
@@ -23,17 +24,21 @@ object Bot : KoinComponent {
         bot {
             token = properties.botToken
             logLevel = LogLevel.Error
+            webhook {
+                url = properties.webhookUrl
+                maxConnections = 50
+                allowedUpdates = listOf("message", "inline_query")
+            }
 
             dispatch {
                 inlineQuery {
                     inlineQueryHandler.onInlineQuery(this)
+                    update.consume()
                 }
 
                 text {
-                    GlobalScope.launch {
-                        messageHandler.onMessage(this@text)
-                        update.consume()
-                    }
+                    messageHandler.onMessage(this@text)
+                    update.consume()
                 }
 
                 telegramError {

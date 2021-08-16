@@ -4,22 +4,26 @@ import com.github.kotlintelegrambot.dispatcher.handlers.InlineQueryHandlerEnviro
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.inlinequeryresults.InlineQueryResult
 import com.github.kotlintelegrambot.entities.inlinequeryresults.InputMessageContent
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import ru.vtb.bot.acronym.service.AcronymService
 
 class InlineQueryHandler(
     private val service: AcronymService,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     fun onInlineQuery(env: InlineQueryHandlerEnvironment) {
-        try {
-            onInlineQuerySafe(env)
-        } catch (t: Throwable) {
-            LOGGER.error("Error handling inline query", t)
+        val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+            LOGGER.error("On inline msg handle error", exception)
+        }
+
+        GlobalScope.launch(exceptionHandler) {
+            handleInlineQuery(env)
         }
     }
 
-    private fun onInlineQuerySafe(env: InlineQueryHandlerEnvironment) {
+    private suspend fun handleInlineQuery(env: InlineQueryHandlerEnvironment) = withContext(defaultDispatcher) {
         val results = service.onFindAcronyms(env.inlineQuery.query)
             .take(10)
             .map {

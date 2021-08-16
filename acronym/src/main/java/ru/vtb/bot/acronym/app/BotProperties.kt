@@ -2,15 +2,21 @@ package ru.vtb.bot.acronym.app
 
 data class BotProperties(
     val botToken: String,
-    val dashbotToken: String?
+    val dashbotToken: String?,
+    val webhookUrl: String?,
+    val webhookHost: String?,
 ) {
     companion object {
         fun initialize(): BotProperties {
             val botToken = System.getenv("BOT_ACRONYM_TOKEN")
             val dashbotToken = System.getenv("DASHBOT_TOKEN")
+            val webhookUrl = System.getenv("WEBHOOK_URL")
+            val webhookHost = System.getenv("WEBHOOK_HOST")
             return BotProperties(
                 botToken = botToken,
-                dashbotToken = dashbotToken
+                dashbotToken = dashbotToken,
+                webhookUrl = webhookUrl,
+                webhookHost = webhookHost,
             )
         }
     }

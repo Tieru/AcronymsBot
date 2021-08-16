@@ -1,5 +1,5 @@
 /log
 /.idea
 */build
-/.gradle
+/**/.gradle
 /acronym/src/main/resources/acronymsbot-0a901264dd53.json

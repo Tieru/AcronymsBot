@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
+import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.vtb.bot.acronym.entity.UserData
@@ -18,9 +19,10 @@ import ru.vtb.bot.acronym.service.entity.TrackService
 class GeneralMessageHandler(
     private val commandParser: CommandParser,
     private val acronymService: AcronymService,
-    private val trackService: TrackService
+    private val trackService: TrackService,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    suspend fun onMessage(environment: TextHandlerEnvironment) {
+    fun onMessage(environment: TextHandlerEnvironment) {
         if (environment.message.chat.type != PRIVATE_CHAT_TYPE) {
             return
         }
@@ -29,15 +31,22 @@ class GeneralMessageHandler(
             return
         }
 
-        try {
-            onMessageSafe(environment)
-        } catch (e: Throwable) {
-            LOGGER.error("Error handling message ${environment.text.take(50)}", e)
+        val handler = CoroutineExceptionHandler { _, exception ->
+            LOGGER.error("On msg handle error ${environment.message.messageId}", exception)
             environment.answer("Произошла ошибка")
+        }
+
+        val loggedText = environment.text.take(10)
+        LOGGER.debug("On msg ${environment.message.messageId} '$loggedText'")
+
+        GlobalScope.launch(handler) {
+            handleMessage(environment)
+
+            LOGGER.debug("On msg handled successfully ${environment.message.messageId}")
         }
     }
 
-    private suspend fun onMessageSafe(environment: TextHandlerEnvironment) {
+    private suspend fun handleMessage(environment: TextHandlerEnvironment) = withContext(defaultDispatcher) {
         val isCommand = environment.text.startsWith("/")
         if (isCommand) {
             handleCommand(environment)
@@ -60,7 +69,7 @@ class GeneralMessageHandler(
     }
 
     private fun onGetAcronym(environment: TextHandlerEnvironment) {
-        trackService.trackIncoming(environment.message.chat.id, "Get acronym", environment.text)
+        trackService.trackIncoming(environment.message.chat.id, "Get acronym", environment.text.take(15))
         val result = acronymService.onGetAcronym(environment.text)
         when (result) {
             GetAcronymResult.NotFound -> environment.answer("Аббревиатура не найдена")
@@ -73,7 +82,7 @@ class GeneralMessageHandler(
     }
 
     private fun onStartCommand(environment: TextHandlerEnvironment) {
-        LOGGER.info("User ${environment.message.from?.usernameOrName} joined bot" )
+        LOGGER.info("User ${environment.message.from?.usernameOrName} joined bot")
         trackService.trackIncoming(environment.message.chat.id, "Start", environment.text)
         environment.answer("Здравствуйте.\nОтправляйте мне аббревиатуры, и я постараюсь найти, что они значат")
     }
