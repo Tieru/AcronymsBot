@@ -14,24 +14,25 @@ application {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:6.0.4")
-    implementation("org.koin:koin-core:2.2.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
-    implementation("com.google.cloud:google-cloud-firestore:2.2.5")
-    implementation("com.google.firebase:firebase-admin:7.1.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.3")
-    implementation("io.ktor:ktor-client-jackson:1.5.4")
-    implementation("io.ktor:ktor-client-core:1.5.4")
-    implementation("io.ktor:ktor-client-cio:1.5.4")
+    implementation(kotlin(Kotlin.stdLib))
+    implementation(Dependencies.telegramBot)
 
+    implementation(Dependencies.coroutinesCore)
+    implementation(Dependencies.coroutinesJdk)
+    implementation(Dependencies.firestore)
+    implementation(Dependencies.firebaseAdmin)
+    implementation(Dependencies.koin)
+    implementation(Dependencies.ktorJackson)
+    implementation(Dependencies.ktorClientCore)
+    implementation(Dependencies.ktorCio)
+    implementation(Dependencies.ktorServerCore)
+    implementation(Dependencies.ktorNetty)
+    implementation(Dependencies.logbackCore)
+    implementation(Dependencies.logbackClassic)
+    implementation(Dependencies.logFileJanino)
+    implementation(Dependencies.slf4j)
 
-    implementation("org.slf4j:slf4j-api:1.7.30")
-    implementation("ch.qos.logback:logback-core:1.2.3")
-    implementation("ch.qos.logback:logback-classic:1.2.3")
-    implementation("org.codehaus.janino:janino:3.1.3")
-
-    testImplementation(kotlin("test-junit"))
+    testImplementation(kotlin(Kotlin.unitTests))
 }
 
 tasks.test {

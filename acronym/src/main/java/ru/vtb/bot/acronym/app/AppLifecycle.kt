@@ -1,14 +1,12 @@
 package ru.vtb.bot.acronym.app
 
 import kotlinx.coroutines.runBlocking
-import org.koin.core.component.KoinApiExtension
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import ru.vtb.bot.acronym.repository.AcronymRepository
 import ru.vtb.bot.acronym.repository.FirestoreInitializer
 import ru.vtb.bot.acronym.service.entity.TrackService
 
-@KoinApiExtension
 object AppLifecycle : KoinComponent {
 
     fun onAppLaunch() {
