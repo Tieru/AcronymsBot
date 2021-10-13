@@ -24,10 +24,13 @@ object Bot : KoinComponent {
         bot {
             token = properties.botToken
             logLevel = LogLevel.Error
-            webhook {
-                url = properties.webhookUrl
-                maxConnections = 50
-                allowedUpdates = listOf("message", "inline_query")
+
+            properties.webhookUrl?.let { webhookUrl ->
+                webhook {
+                    url = webhookUrl
+                    maxConnections = 50
+                    allowedUpdates = listOf("message", "inline_query")
+                }
             }
 
             dispatch {
