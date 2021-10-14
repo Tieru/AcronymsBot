@@ -3,31 +3,26 @@ package ru.vtb.bot.acronym.message
 import com.github.kotlintelegrambot.dispatcher.handlers.TextHandlerEnvironment
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
-import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import kotlinx.coroutines.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.vtb.bot.acronym.entity.UserData
+import ru.vtb.bot.acronym.app.BotProperties
 import ru.vtb.bot.acronym.ext.usernameOrName
 import ru.vtb.bot.acronym.service.AcronymService
-import ru.vtb.bot.acronym.service.entity.AddAcronymResult
-import ru.vtb.bot.acronym.service.entity.DeleteAcronymResult
-import ru.vtb.bot.acronym.service.entity.GetAcronymResult
-import ru.vtb.bot.acronym.service.entity.TrackService
+import ru.vtb.bot.acronym.service.ReportService
+import ru.vtb.bot.acronym.service.entity.*
 
 class GeneralMessageHandler(
     private val commandParser: CommandParser,
     private val acronymService: AcronymService,
+    private val reportService: ReportService,
     private val trackService: TrackService,
+    private val launchProperties: BotProperties,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     fun onMessage(environment: TextHandlerEnvironment) {
-        if (environment.message.chat.type != PRIVATE_CHAT_TYPE) {
-            return
-        }
-
-        if (environment.message.viaBot != null) {
+        if (environment.shouldBeIgnored()) {
             return
         }
 
@@ -47,6 +42,11 @@ class GeneralMessageHandler(
     }
 
     private suspend fun handleMessage(environment: TextHandlerEnvironment) = withContext(defaultDispatcher) {
+        if (environment.isSupportChatMessage()) {
+            onSupportChatMessage(environment)
+            return@withContext
+        }
+
         val isCommand = environment.text.startsWith("/")
         if (isCommand) {
             handleCommand(environment)
@@ -56,14 +56,20 @@ class GeneralMessageHandler(
     }
 
     private suspend fun handleCommand(environment: TextHandlerEnvironment) {
-        val command = commandParser.parseCommand(environment.text)
+        val command = commandParser.parseCommand(
+            environment.text,
+            chatId = environment.message.chat.id,
+            senderId = environment.message.from?.id,
+            replyMessageText = environment.message.replyToMessage?.text,
+        )
         when (command) {
             is UserCommand.StartCommand -> onStartCommand(environment)
+            is UserCommand.ReportCommand -> onReport(environment, command)
             UserCommand.Help -> onHelpCommand(environment)
             is UserCommand.AddAcronymCommand -> onAddAcronymCommand(environment, command.acronym, command.description)
             UserCommand.MarkUpHelpCommand -> onMarkUpHelpCommand(environment)
             UserCommand.ReloadCommand -> onReload(environment)
-            is UserCommand.RemoveAcronymCommand -> onRemoveAcronymCommand(environment, command.acronym)
+            is UserCommand.DeleteAcronymCommand -> onRemoveAcronymCommand(environment, command.acronym)
             UserCommand.UnknownCommand -> onUnknownCommand(environment)
         }
     }
@@ -149,34 +155,52 @@ class GeneralMessageHandler(
         }
     }
 
+    private fun onReport(environment: TextHandlerEnvironment, command: UserCommand.ReportCommand) {
+        trackService.trackIncoming(environment.message.chat.id, "Report", "/report")
+        val response = reportService.onReport(environment.getUserData(), command)
+        when (response) {
+            ReportResult.ShowHelp -> environment.answer(
+                "Напишите сообщение разработчикам, предложите свои идеи, " +
+                        "пожалуйтесь на аббревиатуру или работу бота в целом. Используйте команду /report <текст обращения>. Также можно "
+            )
+            ReportResult.Error -> environment.answer("Произошла внутренняя ошибка. Обращение отправлено :(")
+            is ReportResult.SendSupportMessage -> {
+                environment.bot.sendMessage(
+                    chatId = ChatId.fromId(response.supportChatId),
+                    text = response.msg,
+                )
+                environment.answer("Обращение отправлено")
+            }
+        }
+    }
+
+    private fun onSupportChatMessage(env: TextHandlerEnvironment) {
+        val result = reportService.onSupportChatResponse(env.getUserData(), env.message.replyToMessage, env.text)
+        when (result) {
+            is SupportChatResult.Error -> env.reply(text = result.text)
+            is SupportChatResult.SendMessage ->
+                env.bot.sendMessage(
+                    chatId = ChatId.fromId(result.userId),
+                    text = result.text,
+                )
+            is SupportChatResult.None -> Unit
+        }
+    }
+
     private fun onUnknownCommand(environment: TextHandlerEnvironment) {
         trackService.trackIncoming(environment.message.chat.id, "Unknown", environment.text)
         environment.answer("Некорректная команда")
     }
 
-    private fun TextHandlerEnvironment.answer(
-        text: String,
-        parseMode: ParseMode? = ParseMode.MARKDOWN,
-        replyMarkup: InlineKeyboardMarkup? = null
-    ) {
-        bot.sendMessage(
-            chatId = ChatId.fromId(message.chat.id),
-            text = text,
-            parseMode = parseMode,
-            disableWebPagePreview = true,
-            replyMarkup = replyMarkup,
-        )
+    private fun TextHandlerEnvironment.shouldBeIgnored(): Boolean {
+        if (message.viaBot != null) {
+            return true
+        }
+
+        return message.chat.type != PRIVATE_CHAT_TYPE && !isSupportChatMessage()
     }
 
-    private fun TextHandlerEnvironment.getUserData(): UserData {
-        val from = message.from ?: error("Не могу вас идентифицировать. Ваш ID скрыт?")
-        return UserData(
-            id = from.id,
-            username = from.username,
-            firstName = from.firstName,
-            lastName = from.lastName,
-        )
-    }
+    private fun TextHandlerEnvironment.isSupportChatMessage(): Boolean = message.chat.id == launchProperties.supportChatId
 
     private companion object {
         const val PRIVATE_CHAT_TYPE = "private"
