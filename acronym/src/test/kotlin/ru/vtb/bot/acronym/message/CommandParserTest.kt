@@ -1,6 +1,5 @@
 package ru.vtb.bot.acronym.message
 
-import org.junit.Ignore
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -47,7 +46,6 @@ class CommandParserTest {
         ), result)
     }
 
-    @Ignore
     @Test
     fun `тест parseCommand распознает add с acronym в кавычках`() {
         val input = "/add `В Т Б` Внеш Торг Банк"
@@ -55,7 +53,6 @@ class CommandParserTest {
         assertEquals(UserCommand.AddAcronymCommand(acronym = "В Т Б", description = "Внеш Торг Банк"), result)
     }
 
-    @Ignore
     @Test
     fun `тест parseCommand распознает add с acronym в кавычках "`() {
         val input = "/add \"В Т Б\" Внеш Торг Банк"
@@ -63,7 +60,6 @@ class CommandParserTest {
         assertEquals(UserCommand.AddAcronymCommand(acronym = "В Т Б", description = "Внеш Торг Банк"), result)
     }
 
-    @Ignore
     @Test
     fun `тест parseCommand распознает add с acronym в кавычках «»`() {
         val input = "/add «В Т Б» Внеш Торг Банк"
@@ -71,7 +67,6 @@ class CommandParserTest {
         assertEquals(UserCommand.AddAcronymCommand(acronym = "В Т Б", description = "Внеш Торг Банк"), result)
     }
 
-    @Ignore
     @Test
     fun `тест parseCommand распознает add с acronym в кавычках ””`() {
         val input = "/add ”В Т Б” Внеш Торг Банк"

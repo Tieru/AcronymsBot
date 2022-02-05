@@ -36,9 +36,14 @@ class CommandParser {
             }
 
             text.startsWith(UserCommand.ADD_COMMAND) -> {
-                val args = text.fetchMessageArgs(UserCommand.ADD_COMMAND)
-                val acronym = args.firstOrNull()
-                val description = args.drop(1).joinToString(separator = " ").trim().takeIf { it.isNotBlank() }
+                val args = text.substring("${UserCommand.ADD_COMMAND} ".length)
+                val quoted = ADD_CMD_QUOTES_REGEX.find(args)
+                val (acronym: String?, description) = if (quoted != null && quoted.groupValues.size == 3) {
+                    quoted.groupValues[1] to quoted.groupValues[2]
+                } else {
+                    val parts = args.split(" ")
+                    parts.firstOrNull() to parts.drop(1).joinToString(separator = " ").trim().takeIf { it.isNotBlank() }
+                }
                 return UserCommand.AddAcronymCommand(acronym, description)
             }
 
@@ -53,4 +58,8 @@ class CommandParser {
     }
 
     private fun String.fetchMessageArgs(command: String): List<String> = substring("$command ".length).split(" ")
+
+    companion object {
+        private val ADD_CMD_QUOTES_REGEX = Regex("[\"”'`«](.*)[\"”'`»] (.+)")
+    }
 }
