@@ -161,7 +161,7 @@ class GeneralMessageHandler(
         when (response) {
             ReportResult.ShowHelp -> environment.answer(
                 "Напишите сообщение разработчикам, предложите свои идеи, " +
-                        "пожалуйтесь на аббревиатуру или работу бота в целом. Используйте команду /report <текст обращения>. Также можно "
+                        "пожалуйтесь на аббревиатуру или работу бота в целом. Используйте команду /report <текст обращения> "
             )
             ReportResult.Error -> environment.answer("Произошла внутренняя ошибка. Обращение отправлено :(")
             is ReportResult.SendSupportMessage -> {
