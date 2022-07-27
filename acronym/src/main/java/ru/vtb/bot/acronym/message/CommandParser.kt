@@ -39,7 +39,7 @@ class CommandParser {
                 val args = text.substring("${UserCommand.ADD_COMMAND} ".length)
                 val quoted = ADD_CMD_QUOTES_REGEX.find(args)
                 val (acronym: String?, description) = if (quoted != null && quoted.groupValues.size == 3) {
-                    quoted.groupValues[1] to quoted.groupValues[2]
+                    quoted.groupValues[1].trim() to quoted.groupValues[2].trim()
                 } else {
                     val parts = args.split(" ")
                     parts.firstOrNull() to parts.drop(1).joinToString(separator = " ").trim().takeIf { it.isNotBlank() }

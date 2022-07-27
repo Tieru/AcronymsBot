@@ -6,7 +6,8 @@ data class AcronymData(
     val id: String,
     val value: String,
     val description: String,
-    val addedBy: Long?,
+    val addedById: Long?,
+    val addedByUsername: String?,
 ) {
     val formattedWithMarkdown by lazy {
         val formattedDescription = description.clearMarkdownEscaping().replace("\\n", "\n")

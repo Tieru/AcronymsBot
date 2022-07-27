@@ -7,7 +7,7 @@ interface AcronymRepository {
 
     suspend fun reloadData()
 
-    suspend fun addAcronym(acronym: String, description: String, user: String): AcronymData
+    suspend fun addAcronym(acronym: String, description: String, userId: Long, username: String?): AcronymData
 
     suspend fun removeAcronym(acronym: AcronymData)
 }

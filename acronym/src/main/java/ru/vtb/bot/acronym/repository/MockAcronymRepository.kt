@@ -13,13 +13,14 @@ class MockAcronymRepository: AcronymRepository {
     override suspend fun reloadData() {
     }
 
-    override suspend fun addAcronym(acronym: String, description: String, user: String): AcronymData {
+    override suspend fun addAcronym(acronym: String, description: String, userId: Long, username: String?): AcronymData {
         val clearDescription = description.clearMarkdownEscaping()
         val acronymData = AcronymData(
-            acronym,
-            acronym,
-            clearDescription,
-            user.parseUserId()
+            id = acronym,
+            value = acronym,
+            description = clearDescription,
+            addedById = userId,
+            addedByUsername = username,
         )
 
         cachedData = if (cachedData.find { it.value == acronym } == null) {
@@ -32,13 +33,6 @@ class MockAcronymRepository: AcronymRepository {
 
     override suspend fun removeAcronym(acronym: AcronymData) {
         cachedData = cachedData.filter { it.id != acronym.id }
-    }
-
-    private fun String?.parseUserId(): Long? {
-        if (this == null) {
-            return null
-        }
-        return split(" / ")[1].toLongOrNull()
     }
 
     companion object {

@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.vtb.bot.acronym.entity.AcronymData
 import ru.vtb.bot.acronym.entity.AppException
+import ru.vtb.bot.acronym.entity.UserData
 import ru.vtb.bot.acronym.ext.clearMarkdownEscaping
 import java.util.concurrent.locks.ReentrantLock
 
@@ -32,31 +33,33 @@ class FirebaseAcronymRepository(
     }
 
     private fun documentToAcronym(document: QueryDocumentSnapshot): AcronymData {
-        val userId = document.getString("addedBy").parseUserId()
+        val (username, userId) = document.getString("addedBy").parseUserId()
         return AcronymData(
             id = document.id,
             value = document.getString("value") ?: "",
             description = document.getString("description") ?: "",
-            addedBy = userId,
+            addedById = userId,
+            addedByUsername = username,
         )
     }
 
-    override suspend fun addAcronym(acronym: String, description: String, user: String): AcronymData {
+    override suspend fun addAcronym(acronym: String, description: String, userId: Long, username: String?): AcronymData {
         return withContext(Dispatchers.IO) {
             val clearDescription = description.clearMarkdownEscaping()
             val values = mapOf(
                 "value" to acronym,
                 "description" to clearDescription,
-                "addedBy" to user,
+                "addedBy" to UserData.formatUsernameAndId(username = username.orEmpty(), id = userId),
             )
 
             firestore.collection(COLLECTION).document(acronym).set(values).get()
 
             val acronymData = AcronymData(
-                acronym,
-                acronym,
-                clearDescription,
-                user.parseUserId()
+                id = acronym,
+                value = acronym,
+                description = clearDescription,
+                addedById = userId,
+                addedByUsername = username,
             )
 
             lock.lock()
@@ -82,11 +85,15 @@ class FirebaseAcronymRepository(
         lock.unlock()
     }
 
-    private fun String?.parseUserId(): Long? {
+    private fun String?.parseUserId(): Pair<String?, Long?> {
         if (this == null) {
-            return null
+            return Pair(null, null)
         }
-        return split(" / ")[1].toLongOrNull()
+        val values = split(" / ")
+        if (values.size < 2) {
+            return Pair(null, null)
+        }
+        return values[0] to values[1].toLongOrNull()
     }
 
     companion object {

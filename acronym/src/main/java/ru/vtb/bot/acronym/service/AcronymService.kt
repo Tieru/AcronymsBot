@@ -12,16 +12,21 @@ class AcronymService(
 ) {
 
     suspend fun onAddAcronym(user: UserData, acronym: String, description: String): AddAcronymResult {
-        val newAcronymValue = acronym.toLowerCase()
-        val existingAcronym = acronymRepository.getAcronyms().find { it.value.toLowerCase() == newAcronymValue }
+        val newAcronymValue = acronym.lowercase()
+        val existingAcronym = acronymRepository.getAcronyms().find { it.value.lowercase() == newAcronymValue }
         if (existingAcronym != null && !user.canWriteAcronym(existingAcronym)) {
             return AddAcronymResult.NotAuthorized
         }
 
+        val (userId, username) = existingAcronym?.let {
+            (it.addedById ?: 0) to it.addedByUsername.orEmpty()
+        } ?: (user.id to user.username)
+
         val acronymData = acronymRepository.addAcronym(
             acronym = acronym,
             description = description,
-            user = user.concatUsernameAndId(),
+            userId = userId,
+            username = username,
         )
         return if (existingAcronym == null) {
             AddAcronymResult.AcronymCreated(acronymData)
@@ -31,14 +36,14 @@ class AcronymService(
     }
 
     fun onGetAcronym(acronym: String): GetAcronymResult {
-        val requested = acronym.toLowerCase()
+        val requested = acronym.lowercase()
         val acronyms = acronymRepository.getAcronyms()
-        val found = acronyms.find { it.value.toLowerCase() == requested }
+        val found = acronyms.find { it.value.lowercase() == requested }
         if (found != null) {
             return GetAcronymResult.Found(found)
         }
 
-        val similar = acronyms.filter { it.value.toLowerCase().contains(requested) }.map { it.value }
+        val similar = acronyms.filter { it.value.lowercase().contains(requested) }.map { it.value }
         return if (similar.isEmpty()) {
             GetAcronymResult.NotFound
         } else {
@@ -47,9 +52,9 @@ class AcronymService(
     }
 
     fun onFindAcronyms(acronym: String): List<AcronymData> {
-        val requested = acronym.toLowerCase()
+        val requested = acronym.lowercase()
         val acronyms = acronymRepository.getAcronyms()
-        return acronyms.filter { it.value.toLowerCase().contains(requested) }
+        return acronyms.filter { it.value.lowercase().contains(requested) }
     }
 
     suspend fun onReloadData() {
@@ -57,8 +62,8 @@ class AcronymService(
     }
 
     suspend fun onRemoveAcronym(user: UserData, acronym: String): DeleteAcronymResult {
-        val toBeDeleted = acronym.toLowerCase()
-        val foundAcronym = acronymRepository.getAcronyms().find { it.value.toLowerCase() == toBeDeleted }
+        val toBeDeleted = acronym.lowercase()
+        val foundAcronym = acronymRepository.getAcronyms().find { it.value.lowercase() == toBeDeleted }
             ?: return DeleteAcronymResult.NotFound
 
         if (!user.canWriteAcronym(foundAcronym)) {
@@ -70,6 +75,6 @@ class AcronymService(
     }
 
     private fun UserData.canWriteAcronym(acronym: AcronymData): Boolean {
-        return isAdmin || acronym.addedBy == id
+        return isAdmin || acronym.addedById == id
     }
 }

@@ -13,10 +13,16 @@ data class UserData(
             "@$username"
         }
 
-        return "$title / $id"
+        return formatUsernameAndId(username = title, id = id)
     }
 
     val isAdmin: Boolean by lazy {
         id == 45174710L || id == 229627617L || id == 286761662L
+    }
+
+    companion object {
+        fun formatUsernameAndId(username: String, id: Long): String {
+            return "$username / $id"
+        }
     }
 }
