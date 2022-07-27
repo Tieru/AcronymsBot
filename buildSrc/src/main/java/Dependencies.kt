@@ -8,7 +8,7 @@ object Versions {
     const val logback = "1.2.3"
     const val logFileJanino = "3.1.3"
     const val slf4j = "1.7.30"
-    const val telegramBot = "6.0.4"
+    const val telegramBot = "6.0.6"
 }
 
 object Kotlin {
