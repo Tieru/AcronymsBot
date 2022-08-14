@@ -73,4 +73,18 @@ class CommandParserTest {
         val result = commandParser.parseCommand(input, chatId = 0, senderId = 1, replyMessageText = null)
         assertEquals(UserCommand.AddAcronymCommand(acronym = "В Т Б", description = "Внеш Торг Банк"), result)
     }
+
+    @Test
+    fun `тест parseCommand распознает delete с acronym в кавычках`() {
+        val input = "/delete «'\"”В Т Б”\"'»"
+        val result = commandParser.parseCommand(input, chatId = 0, senderId = 1, replyMessageText = null)
+        assertEquals(UserCommand.DeleteAcronymCommand(acronym = "В Т Б"), result)
+    }
+
+    @Test
+    fun `тест parseCommand распознает delete с acronym c пробелами без кавычек`() {
+        val input = "/delete В Т Б"
+        val result = commandParser.parseCommand(input, chatId = 0, senderId = 1, replyMessageText = null)
+        assertEquals(UserCommand.DeleteAcronymCommand(acronym = "В Т Б"), result)
+    }
 }

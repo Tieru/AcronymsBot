@@ -48,8 +48,8 @@ class CommandParser {
             }
 
             text.startsWith(UserCommand.DELETE_COMMAND) -> {
-                val args = text.fetchMessageArgs(UserCommand.DELETE_COMMAND)
-                val acronym = args.firstOrNull()
+                val acronym = text.substring("${UserCommand.DELETE_COMMAND} ".length)
+                    .replace(Regex("[\"”'`«»]"), "")
                 return UserCommand.DeleteAcronymCommand(acronym)
             }
 
