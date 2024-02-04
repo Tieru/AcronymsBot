@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 class FirebaseAcronymRepository(
     private val firestore: Firestore,
+    private val dataExport: AcronymDataExporter,
 ) : AcronymRepository {
     private var cachedData: List<AcronymData>? = null
     private var lock = ReentrantLock()
@@ -29,6 +30,9 @@ class FirebaseAcronymRepository(
             val collection = firestore.collection(COLLECTION).get()
             val collectionSnapshot = collection.get()
             collectionSnapshot.documents.map(::documentToAcronym)
+                .also {
+                    dataExport.export(it)
+                }
         }
     }
 

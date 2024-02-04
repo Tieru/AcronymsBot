@@ -1,9 +1,8 @@
 package ru.vtb.bot.acronym.injection
 
 import org.koin.dsl.module
-import ru.vtb.bot.acronym.repository.AcronymRepository
-import ru.vtb.bot.acronym.repository.FirebaseAcronymRepository
-import ru.vtb.bot.acronym.repository.FirestoreInitializer
+import ru.vtb.bot.acronym.app.BotProperties
+import ru.vtb.bot.acronym.repository.*
 
 val dataModule = module {
     val firestoreInitializer by lazy { FirestoreInitializer() }
@@ -12,6 +11,14 @@ val dataModule = module {
     single<AcronymRepository> {
         FirebaseAcronymRepository(
             firestore = get(),
+            dataExport = get()
+        )
+    }
+
+    factory {
+        AcronymDataExporter(
+            csvWriter = CsvWriter(),
+            storePath = get<BotProperties>().exportDataPath,
         )
     }
 }
